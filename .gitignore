@@ -1,0 +1,42 @@
+# .NET
+bin/
+obj/
+TestResults/
+*.user
+*.suo
+*.userosscache
+
+# Node / Vite
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+secrets.json
+appsettings.*.local.json
+
+# Runtime data
+storage/*
+!storage/.gitkeep
+logs/
+Logs/
+*.log
+
+# Local databases and certificates
+*.db
+*.db-shm
+*.db-wal
+*.mdf
+*.ldf
+*.pfx
+*.key
+*.pem
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
