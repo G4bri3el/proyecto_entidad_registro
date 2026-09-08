@@ -19,7 +19,11 @@ public sealed class FolderConfiguration : IEntityTypeConfiguration<Folder>
         builder.HasIndex(folder => folder.ParentFolderId);
         builder.HasIndex(folder => folder.IsDeleted);
         builder.HasIndex(folder => new { folder.ParentFolderId, folder.Name })
-            .HasFilter("[IsDeleted] = 0")
+            .HasFilter("\"IsDeleted\" = false AND \"ParentFolderId\" IS NOT NULL")
+            .IsUnique();
+        builder.HasIndex(folder => folder.Name)
+            .HasDatabaseName("IX_Folders_Root_Name")
+            .HasFilter("\"IsDeleted\" = false AND \"ParentFolderId\" IS NULL")
             .IsUnique();
     }
 }

@@ -6,7 +6,7 @@ Plataforma documental segura para subir, visualizar, descargar, organizar y elim
 
 - Frontend: React, TypeScript, Vite, React Router, Axios, TanStack Query, React Hook Form, Zod, react-pdf.
 - Backend: ASP.NET Core Web API en .NET 10 LTS, EF Core, ASP.NET Core Identity, JWT, refresh tokens, 2FA TOTP, Serilog, Swagger en Development.
-- Persistencia: SQL Server para metadatos, usuarios, roles, refresh tokens y auditoria.
+- Persistencia: PostgreSQL para metadatos, usuarios, roles, refresh tokens y auditoria.
 - Storage: `IFileStorage` con implementacion inicial `LocalFileStorage`.
 - Scanner: `IFileScanner` con implementacion inicial `DevelopmentFileScanner`.
 
@@ -33,37 +33,34 @@ storage/
 
 - .NET 10 SDK.
 - Node.js 24+ y npm.
-- SQL Server LocalDB o SQL Server Developer.
+- PostgreSQL local con la base de datos `entidad_registro` creada.
 
 En esta maquina se instalo .NET SDK `10.0.400` para poder compilar la solucion.
 
 ## Configuracion Backend
 
-Los secretos no estan en el repositorio. Configurelos con user-secrets:
+Los secretos no estan en el repositorio. Configurelos con user-secrets desde el proyecto API:
 
 ```powershell
-cd backend/src/DocumentManager.Api
+cd C:\SAETA\Proyecto_entidad_registro\backend\src\DocumentManager.Api
 dotnet user-secrets set "Jwt:SigningKey" "reemplace-con-un-secreto-local-de-al-menos-32-caracteres"
+dotnet user-secrets set "Database:Provider" "PostgreSQL"
+dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=entidad_registro;Username=postgres;Password=TU_PASSWORD_DE_POSTGRES"
 dotnet user-secrets set "DevelopmentSeed:AdminEmail" "admin@example.local"
 dotnet user-secrets set "DevelopmentSeed:AdminPassword" "UnaContrasenaTemporal123"
 ```
 
-La connection string local por defecto usa LocalDB:
-
-```json
-"Server=(localdb)\\mssqllocaldb;Database=DocumentManagerDev;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True"
-```
-
-Para otra instancia SQL Server, configure `ConnectionStrings:DefaultConnection` con user-secrets o variable de entorno.
+Si tu usuario de PostgreSQL no es `postgres`, cambia `Username` y `Password` por los datos que usas en pgAdmin 4.
 
 ## Base de Datos
 
-La aplicacion no usa `EnsureDeleted()` ni destruye la BD al iniciar.
+La aplicacion no usa `EnsureDeleted()` ni destruye la BD al iniciar. Como ya creaste `entidad_registro` en pgAdmin 4, este comando solo aplica las tablas e indices de la migracion:
 
 ```powershell
-cd backend
+cd C:\SAETA\Proyecto_entidad_registro\backend
 dotnet tool restore
-dotnet tool run dotnet-ef database update --project src/DocumentManager.Infrastructure/DocumentManager.Infrastructure.csproj --startup-project src/DocumentManager.Api/DocumentManager.Api.csproj --context ApplicationDbContext
+dotnet restore
+dotnet tool run dotnet-ef database update --project src\DocumentManager.Infrastructure\DocumentManager.Infrastructure.csproj --startup-project src\DocumentManager.Api\DocumentManager.Api.csproj --context ApplicationDbContext
 ```
 
 El seed de Development crea roles `ADMINISTRATOR`, `EDITOR`, `VIEWER` y crea admin solo si `DevelopmentSeed` tiene email y password configurados.
@@ -73,22 +70,22 @@ El seed de Development crea roles `ADMINISTRATOR`, `EDITOR`, `VIEWER` y crea adm
 Backend:
 
 ```powershell
-cd backend/src/DocumentManager.Api
-dotnet run
+cd C:\SAETA\Proyecto_entidad_registro\backend\src\DocumentManager.Api
+dotnet run --launch-profile https
 ```
 
 Frontend:
 
 ```powershell
-cd frontend
+cd C:\SAETA\Proyecto_entidad_registro\frontend
 npm install
 npm run dev
 ```
 
-Por defecto el frontend espera la API en `https://localhost:7043/api`. Puede cambiarse con:
+Por defecto el frontend espera la API en `https://localhost:7043/api`. Si Visual Studio o `dotnet run` muestran otro puerto, crea `C:\SAETA\Proyecto_entidad_registro\frontend\.env` con:
 
 ```text
-VITE_API_BASE_URL=https://localhost:7043/api
+VITE_API_BASE_URL=https://localhost:TU_PUERTO/api
 ```
 
 ## Seguridad Implementada
@@ -142,7 +139,7 @@ Para cambiar storage local por Huawei OBS, agregue una clase `HuaweiObsFileStora
 ## Tests
 
 ```powershell
-cd backend
+cd C:\SAETA\Proyecto_entidad_registro\backend
 dotnet test DocumentManager.sln
 ```
 

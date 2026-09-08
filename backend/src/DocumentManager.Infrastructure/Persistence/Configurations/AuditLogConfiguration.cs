@@ -19,7 +19,7 @@ public sealed class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
         builder.Property(audit => audit.HttpMethod).HasMaxLength(16);
         builder.Property(audit => audit.Endpoint).HasMaxLength(300);
         builder.Property(audit => audit.CorrelationId).HasMaxLength(80).IsRequired();
-        builder.Property(audit => audit.AdditionalData).HasColumnType("nvarchar(max)");
+        builder.Property(audit => audit.AdditionalData).HasColumnType("text");
         builder.HasIndex(audit => audit.UserId);
         builder.HasIndex(audit => audit.Action);
         builder.HasIndex(audit => audit.CreatedAt);

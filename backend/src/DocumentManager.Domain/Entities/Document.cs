@@ -18,5 +18,5 @@ public sealed class Document
     public bool IsDeleted { get; set; }
     public string? DeletedByUserId { get; set; }
     public DateTimeOffset? DeletedAt { get; set; }
-    public byte[] RowVersion { get; set; } = [];
+    public uint RowVersion { get; set; }
 }
