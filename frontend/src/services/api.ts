@@ -1,7 +1,7 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import type { RefreshTokenResponse } from '../types';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'https://localhost:7092/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:5285/api';
 let accessToken: string | null = null;
 let onSessionExpired: (() => void) | null = null;
 let refreshing: Promise<string | null> | null = null;

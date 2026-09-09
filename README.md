@@ -45,7 +45,7 @@ Los secretos de desarrollo van en este archivo local ignorado por Git:
 C:\SAETA\Proyecto_entidad_registro\.env
 ```
 
-Ya existe un `.env` local con placeholders. Edita solo esta parte con tu password real de PostgreSQL:
+Edita la connection string y pon tu password real de PostgreSQL:
 
 ```dotenv
 ConnectionStrings__DefaultConnection=Host=localhost;Port=5432;Database=entidad_registro;Username=postgres;Password=TU_PASSWORD_DE_POSTGRES
@@ -61,15 +61,19 @@ Database__Provider=PostgreSQL
 ConnectionStrings__DefaultConnection=Host=localhost;Port=5432;Database=entidad_registro;Username=postgres;Password=TU_PASSWORD_DE_POSTGRES
 
 Jwt__SigningKey=local-dev-only-change-this-signing-key-before-sharing-1234567890
+DevelopmentSeed__AdminUserName=Administrador
 DevelopmentSeed__AdminEmail=admin@example.local
-DevelopmentSeed__AdminPassword=UnaContrasenaTemporal123
+DevelopmentSeed__AdminPassword=TU_PASSWORD_ADMIN_LOCAL_12_CHARS
+DevelopmentSeed__ResetAdminPassword=true
 DevelopmentSeed__AdminFirstName=Administrador
 DevelopmentSeed__AdminLastName=Local
 
-VITE_API_BASE_URL=https://localhost:7092/api
+VITE_API_BASE_URL=http://localhost:5285/api
 ```
 
-Si tu usuario de PostgreSQL no es `postgres`, cambia `Username` tambien. El backend y las migraciones cargan este `.env` en desarrollo; Vite tambien lee el mismo archivo para `VITE_API_BASE_URL`.
+El usuario inicial para entrar a la app es `Administrador` y la contrasena es el valor de `DevelopmentSeed__AdminPassword`. Debe tener minimo 12 caracteres porque Identity valida la politica de contrasenas. Si tu usuario de PostgreSQL no es `postgres`, cambia `Username` tambien.
+
+En Development el frontend usa HTTP local (`http://localhost:5285/api`) para evitar errores de certificado como `ERR_CERT_AUTHORITY_INVALID`. En Production el backend sigue aplicando HTTPS.
 
 ## Base de Datos
 
@@ -82,7 +86,7 @@ dotnet restore
 dotnet tool run dotnet-ef database update --project src\DocumentManager.Infrastructure\DocumentManager.Infrastructure.csproj --startup-project src\DocumentManager.Api\DocumentManager.Api.csproj --context ApplicationDbContext
 ```
 
-El seed de Development crea roles `ADMINISTRATOR`, `EDITOR`, `VIEWER` y crea admin solo si `DevelopmentSeed` tiene email y password configurados en `.env`.
+El seed de Development crea roles `ADMINISTRATOR`, `EDITOR`, `VIEWER` y sincroniza el admin si `DevelopmentSeed` tiene email y password configurados en `.env`.
 
 ## Ejecutar
 
@@ -90,7 +94,7 @@ Backend:
 
 ```powershell
 cd C:\SAETA\Proyecto_entidad_registro\backend\src\DocumentManager.Api
-dotnet run --launch-profile https
+dotnet run --launch-profile http
 ```
 
 Frontend:
@@ -101,15 +105,16 @@ npm install
 npm run dev
 ```
 
-Por defecto el backend usa `https://localhost:7092` y el frontend queda en `http://localhost:5173`.
+Abre la app en `http://localhost:5173`. Swagger queda disponible en `http://localhost:5285/swagger` con el perfil `http`.
 
 ## Visual Studio
 
 1. Abre `C:\SAETA\Proyecto_entidad_registro\backend\DocumentManager.sln`.
 2. Edita `C:\SAETA\Proyecto_entidad_registro\.env` y pon tu password real de PostgreSQL.
 3. En la Consola del Administrador de paquetes o terminal, ejecuta la migracion desde `C:\SAETA\Proyecto_entidad_registro\backend`.
-4. Inicia el perfil `https` de `DocumentManager.Api`.
+4. Inicia el perfil `http` de `DocumentManager.Api` para desarrollo local.
 5. En otra terminal ejecuta el frontend con `npm run dev` desde `C:\SAETA\Proyecto_entidad_registro\frontend`.
+6. Entra con usuario `Administrador` y la contrasena configurada en `DevelopmentSeed__AdminPassword`.
 
 ## Seguridad Implementada
 

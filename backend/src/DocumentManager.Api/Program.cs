@@ -90,7 +90,10 @@ try
         app.UseSwaggerUI();
     }
 
-    app.UseHttpsRedirection();
+    if (!app.Environment.IsDevelopment())
+    {
+        app.UseHttpsRedirection();
+    }
     app.UseCors("frontend");
     app.UseRateLimiter();
     app.UseAuthentication();

@@ -50,17 +50,23 @@ public static class DevelopmentDataSeeder
             return;
         }
 
+        var adminEmail = seedOptions.AdminEmail.Trim();
+        var adminUserName = string.IsNullOrWhiteSpace(seedOptions.AdminUserName)
+            ? adminEmail
+            : seedOptions.AdminUserName.Trim();
+
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-        var existing = await userManager.FindByEmailAsync(seedOptions.AdminEmail);
+        var existing = await userManager.FindByEmailAsync(adminEmail);
         if (existing is not null)
         {
+            await SyncExistingAdminAsync(userManager, existing, adminUserName, seedOptions.AdminPassword, seedOptions.ResetAdminPassword);
             return;
         }
 
         var admin = new ApplicationUser
         {
-            UserName = seedOptions.AdminEmail,
-            Email = seedOptions.AdminEmail,
+            UserName = adminUserName,
+            Email = adminEmail,
             FirstName = seedOptions.AdminFirstName ?? "Administrador",
             LastName = seedOptions.AdminLastName ?? "Local",
             EmailConfirmed = true,
@@ -69,9 +75,65 @@ public static class DevelopmentDataSeeder
         };
 
         var result = await userManager.CreateAsync(admin, seedOptions.AdminPassword);
+        EnsureSucceeded(result, "No se pudo crear el administrador de desarrollo. Revise DevelopmentSeed__AdminPassword; debe cumplir la politica de Identity.");
+
+        result = await userManager.AddToRoleAsync(admin, AppRoles.Administrator);
+        EnsureSucceeded(result, "No se pudo asignar el rol ADMINISTRATOR al administrador de desarrollo.");
+    }
+
+    private static async Task SyncExistingAdminAsync(UserManager<ApplicationUser> userManager, ApplicationUser admin, string adminUserName, string adminPassword, bool resetPassword)
+    {
+        var changed = false;
+        if (!string.Equals(admin.UserName, adminUserName, StringComparison.Ordinal))
+        {
+            var owner = await userManager.FindByNameAsync(adminUserName);
+            if (owner is null || owner.Id == admin.Id)
+            {
+                admin.UserName = adminUserName;
+                changed = true;
+            }
+        }
+
+        if (!admin.EmailConfirmed)
+        {
+            admin.EmailConfirmed = true;
+            changed = true;
+        }
+
+        if (!admin.IsActive)
+        {
+            admin.IsActive = true;
+            changed = true;
+        }
+
+        if (changed)
+        {
+            var updateResult = await userManager.UpdateAsync(admin);
+            EnsureSucceeded(updateResult, "No se pudo actualizar el administrador de desarrollo.");
+        }
+
+        if (!await userManager.IsInRoleAsync(admin, AppRoles.Administrator))
+        {
+            var roleResult = await userManager.AddToRoleAsync(admin, AppRoles.Administrator);
+            EnsureSucceeded(roleResult, "No se pudo asignar el rol ADMINISTRATOR al administrador de desarrollo existente.");
+        }
+
+        if (resetPassword)
+        {
+            var token = await userManager.GeneratePasswordResetTokenAsync(admin);
+            var passwordResult = await userManager.ResetPasswordAsync(admin, token, adminPassword);
+            EnsureSucceeded(passwordResult, "No se pudo sincronizar DevelopmentSeed__AdminPassword; debe cumplir la politica de Identity.");
+        }
+    }
+
+    private static void EnsureSucceeded(IdentityResult result, string message)
+    {
         if (result.Succeeded)
         {
-            await userManager.AddToRoleAsync(admin, AppRoles.Administrator);
+            return;
         }
+
+        var errors = string.Join(" ", result.Errors.Select(error => error.Description));
+        throw new InvalidOperationException($"{message} {errors}");
     }
 }
