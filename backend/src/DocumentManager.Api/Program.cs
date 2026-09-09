@@ -15,6 +15,8 @@ Log.Logger = new LoggerConfiguration()
 
 try
 {
+    DotEnvLoader.LoadNearest(Directory.GetCurrentDirectory(), AppContext.BaseDirectory);
+
     var builder = WebApplication.CreateBuilder(args);
 
     builder.Host.UseSerilog((context, services, loggerConfiguration) =>

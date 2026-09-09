@@ -37,20 +37,39 @@ storage/
 
 En esta maquina se instalo .NET SDK `10.0.400` para poder compilar la solucion.
 
-## Configuracion Backend
+## Configuracion Local
 
-Los secretos no estan en el repositorio. Configurelos con user-secrets desde el proyecto API:
+Los secretos de desarrollo van en este archivo local ignorado por Git:
 
-```powershell
-cd C:\SAETA\Proyecto_entidad_registro\backend\src\DocumentManager.Api
-dotnet user-secrets set "Jwt:SigningKey" "reemplace-con-un-secreto-local-de-al-menos-32-caracteres"
-dotnet user-secrets set "Database:Provider" "PostgreSQL"
-dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Port=5432;Database=entidad_registro;Username=postgres;Password=TU_PASSWORD_DE_POSTGRES"
-dotnet user-secrets set "DevelopmentSeed:AdminEmail" "admin@example.local"
-dotnet user-secrets set "DevelopmentSeed:AdminPassword" "UnaContrasenaTemporal123"
+```text
+C:\SAETA\Proyecto_entidad_registro\.env
 ```
 
-Si tu usuario de PostgreSQL no es `postgres`, cambia `Username` y `Password` por los datos que usas en pgAdmin 4.
+Ya existe un `.env` local con placeholders. Edita solo esta parte con tu password real de PostgreSQL:
+
+```dotenv
+ConnectionStrings__DefaultConnection=Host=localhost;Port=5432;Database=entidad_registro;Username=postgres;Password=TU_PASSWORD_DE_POSTGRES
+```
+
+El archivo completo debe quedar con este formato:
+
+```dotenv
+ASPNETCORE_ENVIRONMENT=Development
+DOTNET_ENVIRONMENT=Development
+
+Database__Provider=PostgreSQL
+ConnectionStrings__DefaultConnection=Host=localhost;Port=5432;Database=entidad_registro;Username=postgres;Password=TU_PASSWORD_DE_POSTGRES
+
+Jwt__SigningKey=local-dev-only-change-this-signing-key-before-sharing-1234567890
+DevelopmentSeed__AdminEmail=admin@example.local
+DevelopmentSeed__AdminPassword=UnaContrasenaTemporal123
+DevelopmentSeed__AdminFirstName=Administrador
+DevelopmentSeed__AdminLastName=Local
+
+VITE_API_BASE_URL=https://localhost:7092/api
+```
+
+Si tu usuario de PostgreSQL no es `postgres`, cambia `Username` tambien. El backend y las migraciones cargan este `.env` en desarrollo; Vite tambien lee el mismo archivo para `VITE_API_BASE_URL`.
 
 ## Base de Datos
 
@@ -63,7 +82,7 @@ dotnet restore
 dotnet tool run dotnet-ef database update --project src\DocumentManager.Infrastructure\DocumentManager.Infrastructure.csproj --startup-project src\DocumentManager.Api\DocumentManager.Api.csproj --context ApplicationDbContext
 ```
 
-El seed de Development crea roles `ADMINISTRATOR`, `EDITOR`, `VIEWER` y crea admin solo si `DevelopmentSeed` tiene email y password configurados.
+El seed de Development crea roles `ADMINISTRATOR`, `EDITOR`, `VIEWER` y crea admin solo si `DevelopmentSeed` tiene email y password configurados en `.env`.
 
 ## Ejecutar
 
@@ -82,11 +101,15 @@ npm install
 npm run dev
 ```
 
-Por defecto el frontend espera la API en `https://localhost:7043/api`. Si Visual Studio o `dotnet run` muestran otro puerto, crea `C:\SAETA\Proyecto_entidad_registro\frontend\.env` con:
+Por defecto el backend usa `https://localhost:7092` y el frontend queda en `http://localhost:5173`.
 
-```text
-VITE_API_BASE_URL=https://localhost:TU_PUERTO/api
-```
+## Visual Studio
+
+1. Abre `C:\SAETA\Proyecto_entidad_registro\backend\DocumentManager.sln`.
+2. Edita `C:\SAETA\Proyecto_entidad_registro\.env` y pon tu password real de PostgreSQL.
+3. En la Consola del Administrador de paquetes o terminal, ejecuta la migracion desde `C:\SAETA\Proyecto_entidad_registro\backend`.
+4. Inicia el perfil `https` de `DocumentManager.Api`.
+5. En otra terminal ejecuta el frontend con `npm run dev` desde `C:\SAETA\Proyecto_entidad_registro\frontend`.
 
 ## Seguridad Implementada
 
